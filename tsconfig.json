@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "lib": ["lib/*"],
+      "example": ["src/*"]
+    },
+    "outDir": "./dist/",
+    "strict": true,
+    "noImplicitAny": true,
+    "noUnusedLocals": true,
+    "removeComments": true,
+    "noImplicitReturns": true,
+    "strictNullChecks": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "module": "es6",
+    "target": "es5",
+    "jsx": "react",
+    "types": [
+      "cypress"
+    ]
+  },
+  "exclude": [
+    ".vscode",
+    "dist",
+    "doc"
+  ]
+}

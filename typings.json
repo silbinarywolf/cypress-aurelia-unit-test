@@ -1,0 +1,4 @@
+{
+  "name": "cypress-aurelia-unit-test",
+  "main": "dist/amd/aurelia-testing.d.ts"
+}
