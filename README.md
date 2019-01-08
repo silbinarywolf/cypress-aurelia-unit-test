@@ -1,5 +1,6 @@
 # Cypress Aurelia Unit Test
 
+[![Build Status](https://travis-ci.org/silbinarywolf/cypress-aurelia-unit-test.svg?branch=master)](https://travis-ci.org/silbinarywolf/cypress-aurelia-unit-test)
 [![npm Version](https://img.shields.io/npm/v/cypress-aurelia-unit-test.svg)](https://www.npmjs.com/package/cypress-aurelia-unit-test)
 
 This is a library designed to feel like the official [aurelia/testing](https://github.com/aurelia/testing) library but instead it is built to work with Cypress.
