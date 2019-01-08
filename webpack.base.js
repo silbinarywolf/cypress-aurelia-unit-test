@@ -2,12 +2,16 @@ const path = require('path');
 const { AureliaPlugin } = require('aurelia-webpack-plugin');
 
 module.exports = {
-  entry: {
-    main: path.resolve(__dirname, 'src', 'main.ts'),
-  },
   plugins: [],
   module: {
     rules: [
+      {
+        test: /\.html$/i,
+        loader: 'html-loader',
+        include: [
+          path.resolve('src')
+        ],
+      },
       {
         test: /\.scss$/,
         use: [
@@ -34,7 +38,7 @@ module.exports = {
       {
         test: /\.tsx?$/,
         use: 'ts-loader',
-        exclude: /node_modules/
+        exclude: path.resolve(__dirname, 'node_modules'),
       }
     ]
   },
@@ -45,14 +49,16 @@ module.exports = {
       '.js'
     ],
     alias: {
-      // NOTE: Jake: 2018-11-11
-      // This should align with tsconfig.json "paths" where possible so that
-      // IDE's can utilize tsconfig.json
-      lib: path.resolve(__dirname, 'lib'),
-      example: path.resolve(__dirname, 'src'),
+      // NOTE(Jake): 2019-01-08
+      // This needs to be aligned to TypeScript tsconfig "paths".
+      // Alternatively, awesome-typescript-loader can be installed so this doesn't
+      // need to be managed in two places.
+      'cypress-aurelia-unit-test': path.resolve(__dirname, 'lib', 'index.ts'),
+      '~':  path.resolve(__dirname, 'src'),
     },
     modules: [
       path.resolve(__dirname, 'src'),
+      path.resolve(__dirname, 'lib'),
       path.resolve(__dirname, 'node_modules'),
     ],
   },

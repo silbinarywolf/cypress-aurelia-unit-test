@@ -3,258 +3,267 @@ import { Aurelia, Container, FrameworkConfiguration, ViewCompiler, ViewResources
 import { DOM } from 'aurelia-pal';
 import { View } from 'aurelia-templating';
 
-interface AureliaWithRoot extends Aurelia {
-    root: ViewWithControllers;
-}
+// NOTE(Jake): 2019-01-07
+// Used by aurelia-testing. Keeping incase we want to reintroduce.
+// interface AureliaWithRoot extends Aurelia {
+//    root: ViewWithControllers;
+// }
 
 interface ViewWithControllers extends View {
-    controllers: Array<{viewModel: any}>;
+  controllers: Array<{ viewModel: any }>;
 }
 
 // having weak reference to styles prevents garbage collection
 // and "losing" styles when the next test starts
-const stylesCache: Map<string, NodeListOf<Element>> = new Map();
+const stylesCache: Map<string, NodeListOf<Element>> = new Map<string, NodeListOf<Element>>();
 
 // track components that were attached so they can be detached before
 // each build
 const componentsAttached: any[] = [];
 
-// wait 4 ms after calling attached(), this gives breathing room for legacy code that utilizes
-// bad setTimeout() patterns when initializing code. A future improvement may be to disable this
-// if a user needs to.
-//const AttachedWaitTime = 4;
-
 function disposeComponents() {
-    for (let component of componentsAttached) {
-        if (component.detached) {
-            component.detached();
-        }
+  for (const component of componentsAttached) {
+    if (component.detached) {
+      component.detached();
     }
-    componentsAttached.length = 0;
+  }
+  componentsAttached.length = 0;
 }
 
 // NOTE: Jake: 2018-12-18
 // Taken from: https://github.com/bahmutov/cypress-react-unit-test/blob/master/lib/index.js
 function copyStyles(componentName: string): void {
-    // need to find same component when component is recompiled
-    // by the JSX preprocessor. Thus have to use something else,
-    // like component name
-    const hash = 'TODO_A_BETTER_COMPONENT_NAME_HASH'; // component.type.name
+  // need to find same component when component is recompiled
+  // by the JSX preprocessor. Thus have to use something else,
+  // like component name
+  const hash = componentName;
 
-    let styles = document.querySelectorAll('head style');
-    if (styles.length) {
-        console.log('Injected %d styles into view', styles.length);
-        stylesCache.set(hash, styles);
-    } else {
-        console.warn('No styles injected for this component, checking cache...');
-        if (stylesCache.has(hash)) {
-            styles = stylesCache.get(hash);
-        } else {
-            styles = null;
-        }
+  let styles = document.querySelectorAll('head style');
+  if (styles.length) {
+    // tslint:disable-next-line:no-console
+    console.log('Injected %d styles into view', styles.length);
+    stylesCache.set(hash, styles);
+  } else {
+    // tslint:disable-next-line:no-console
+    console.log('No styles injected for this component, checking cache...');
+    const cachedStyles = stylesCache.get(hash);
+    if (cachedStyles) {
+      styles = cachedStyles;
     }
+  }
 
-    if (!styles) {
-        return;
-    }
+  if (!styles) {
+    return;
+  }
 
-    const parentDocument = window.parent.document;
-    const projectName = (window as any).Cypress.config('projectName');
-    const appIframeId = `Your App: '${projectName}'`;
-    const appIframe = parentDocument.getElementById(appIframeId);
-    const head = (appIframe as any).contentDocument.querySelector('head');
-    styles.forEach(style => {
-        head.appendChild(style);
-    });
+  const parentDocument = window.parent.document;
+  const projectName = (window as any).Cypress.config('projectName');
+  const appIframeId = `Your App: '${projectName}'`;
+  const appIframe = parentDocument.getElementById(appIframeId);
+  const head = (appIframe as any).contentDocument.querySelector('head');
+  styles.forEach(style => {
+    head.appendChild(style);
+  });
 }
 
 export class StageComponent {
-    public static withResources<T = any>(resources: string | string[] = []): ComponentTester<T> {
-        // NOTE: Jake: 2018-12-19
-        // Any components we tracked from the previous test, lets dispose them.
-        disposeComponents();
+  public static withResources<T = any>(resources: string | string[] = []): ComponentTester<T> {
+    // NOTE: Jake: 2018-12-19
+    // Any components we tracked from the previous test, lets dispose them.
+    disposeComponents();
 
-        // NOTE: Jake: 2018-12-19
-        // Clear document.body, this is so the first step of 2nd test won't have
-        // the previous test rendered in it when you're debugging.
-        const document: Document = cy.state('document');
-        while (document.body.firstChild) {
-            document.body.removeChild(document.body.firstChild);
-        }
-
-        return new ComponentTester().withResources(resources);
+    // NOTE: Jake: 2018-12-19
+    // Clear document.body, this is so the first step of 2nd test won't have
+    // the previous test rendered in it when you're debugging.
+    const document: Document = (cy as any).state('document');
+    while (document.body.firstChild) {
+      document.body.removeChild(document.body.firstChild);
     }
+
+    return new ComponentTester().withResources(resources);
+  }
 }
 
 export class ComponentTester<T = any> {
-    public viewModel: T;
+  public viewModel?: T;
 
-    //public element: Element;
+  // public element: Element;
 
-    //private rootView: View;
+  // private rootView: View;
 
-    private host: HTMLTemplateElement | HTMLDivElement;
+  private host: HTMLTemplateElement | HTMLDivElement | null = null;
 
-    private html: string;
+  private html: string = '';
 
-    private resources: string[] = [];
+  private resources: string[] = [];
 
-    private bindingContext: {};
+  private bindingContext: {} = {};
 
-    public withResources(resources: string | string[]): ComponentTester<T> {
-        if (typeof resources === 'string') {
-            this.resources = [resources];
-            return this;
-        }
-        this.resources = resources;
-        return this;
+  public withResources(resources: string | string[]): ComponentTester<T> {
+    if (typeof resources === 'string') {
+      this.resources = [resources];
+      return this;
     }
+    this.resources = resources;
+    return this;
+  }
 
-    public inView(html: string): ComponentTester<T> {
-        this.html = html;
-        return this;
-    }
+  public inView(html: string): ComponentTester<T> {
+    this.html = html;
+    return this;
+  }
 
-    public boundTo(bindingContext: {}): ComponentTester<T> {
-        this.bindingContext = bindingContext;
-        return this;
-    }
+  public boundTo(bindingContext: {}): ComponentTester<T> {
+    this.bindingContext = bindingContext;
+    return this;
+  }
 
-    public bootstrap(configure: (aurelia: Aurelia) => void | FrameworkConfiguration) {
-        this.configure = configure;
-        return this;
-    }
+  public bootstrap(configure: (aurelia: Aurelia) => void | FrameworkConfiguration) {
+    this.configure = configure;
+    return this;
+  }
 
-    public create(bootstrap: (configure: (aurelia: Aurelia) => Promise<void>) => Promise<void>) {
-        return cy.document().then((document: Document) => {
-            return new (window as any).Cypress.Promise((resolve, reject) => {
-                return bootstrap((aurelia: AureliaWithRoot) => {
-                    return Promise.resolve(this.configure(aurelia)).then(() => {
-                        if (this.resources) {
-                            aurelia.use.globalResources(this.resources);
-                        }
+  public create(bootstrap: (configure: (aurelia: Aurelia) => Promise<void>) => Promise<void>): any {
+    // NOTE(Jake): 2019-01-08
+    // We have an "any" annotation on create to silence the following error:
+    // TS4053: Return type of public method from exported class has or is using name 'Bluebird' from external module
+    // "cypress-aurelia-unit-test/node_modules/cypress/node_modules/@types/bluebird/index" but cannot be named.
 
-                        // NOTE(Jake): 2018-12-18
-                        // Fixes "inner error: TypeError: Illegal constructor"
-                        // Modified answer from: https://github.com/aurelia/framework/issues/382
-                        aurelia.container.registerInstance(Element, document.createElement);
+    return new Cypress.Promise((resolve, reject) => {
+      const document: Document = (cy as any).state('document');
+      return bootstrap((aurelia: Aurelia) => {
+        return Promise.resolve(this.configure(aurelia)).then(() => {
+          if (this.resources) {
+            aurelia.use.globalResources(this.resources);
+          }
 
-                        // NOTE(Jake): 2018-12-20
-                        // Fix cases where a user has used @inject(DOM.Element)
-                        aurelia.container.registerInstance(DOM.Element, document.createElement);
+          // NOTE(Jake): 2018-12-18
+          // Fixes "inner error: TypeError: Illegal constructor"
+          // Modified answer from: https://github.com/aurelia/framework/issues/382
+          aurelia.container.registerInstance(Element, document.createElement);
 
-                        // Remove any plugins that don't work or cause crashes
-                        {
-                            let plugins: any[] = (aurelia.use as any).info;
-                            plugins = plugins.filter((plugin) => {
-                                if (plugin &&
-                                    plugin.moduleId &&
-                                    plugin.moduleId === 'aurelia-dialog') {
-                                    // NOTE: Jake: 2018-12-19
-                                    // Aurelia dialog does not work with Cypress Unit testing. It seems like it tries to load <ux-dialog> in its own
-                                    // special way, and this falls over.
-                                    /*
-                                        (missing: http://localhost:61465/__cypress/iframes/integration/unit/4.autocomplete.test.ts)
-                                            at HTMLScriptElement.onScriptComplete (http://localhost:61465/__cypress/tests?p=cypress\integration\unit\autocomplete.test.ts-275:115:29)
-                                        From previous event:
-                                            at Function.requireEnsure [as e] (http://localhost:61465/__cypress/tests?p=cypress\integration\unit\autocomplete.test.ts-275:89:28)
-                                            at Object.ux-dialog (webpack:///./node_modules/aurelia-dialog/dist/native-modules/dialog-configuration.js?:13:59)
-                                            at eval (webpack:///./node_modules/aurelia-dialog/dist/native-modules/dialog-configuration.js?:41:91)
-                                            at Array.map (<anonymous>)
-                                    */
-                                    console.warn('aurelia-dialog causes Cypress to crash. Removing plugin...');
-                                    return false;
-                                }
-                                return true;
-                            });
-                            (aurelia.use as any).info = plugins;
-                        }
+          // NOTE(Jake): 2018-12-20
+          // Fix cases where a user has used @inject(DOM.Element)
+          aurelia.container.registerInstance(DOM.Element, document.createElement);
 
-                        return aurelia.start().then(() => {
-                            if (document.activeElement !== document.body) {
-                                // Reset focus to body element if it's not on it
-                                document.body.focus();
-                            }
-
-                            this.host = document.createElement('template');
-                            this.host.innerHTML = this.html;
-
-                            // Compile the template and copy styles to the main iframe
-                            let view: ViewWithControllers;
-                            const compiler = Container.instance.get(ViewCompiler);
-                            try {
-                                view = compiler.compile(this.host, Container.instance.get(ViewResources)).create(Container.instance);
-                            } catch (err) {
-                                reject(err);
-                                return;
-                            }
-
-                            if (view.controllers.length > 0) {
-                                this.viewModel = view.controllers[0].viewModel;
-                                copyStyles(this.viewModel.constructor.name);
-                            } else {
-                                // NOTE(Jake): 2018-12-19
-                                // Not sure if/when this case will execute or
-                                // what the ramifications of this are.
-                                copyStyles('undefined');
-                                console.warn('Unable to determine component name from template. Bugs may occur in cleanup.', this.html);
-                            }
-
-                            // Clear the document body and add child
-                            while (document.body.firstChild) {
-                                document.body.removeChild(document.body.firstChild);
-                            }
-                            document.body.appendChild(view.fragment);
-
-                            // NOTE: Jake: 2018-12-20
-                            // Fix aurelia.enhance() problems that are occuring due to
-                            // a <compose> in a component.
-                            // Research: https://github.com/aurelia/framework/issues/600#issuecomment-252479570
-                            // Gist: https://gist.run/?id=c59eed72e1c255b8f462c1d45e495a7a
-                            document.body.querySelectorAll('.au-target').forEach((el) => {
-                                el.classList.remove('au-target');
-                                el.removeAttribute('au-target-id');
-                            });
-
-                            return aurelia.enhance(this.bindingContext, document.body).then(() => {
-                                // NOTE: Jake: 2018-12-19
-                                // These are in the original aurelia-testing library
-                                //this.rootView = aurelia.root;
-                                //this.element = this.host.firstElementChild as Element;
-
-                                if (view.bind) {
-                                    view.bind(this.bindingContext);
-                                }
-                                if (view.attached) {
-                                    view.attached();
-                                }
-                                componentsAttached.push(view);
-
-                                // Wait 4 frames, this allows us to do "hacky" CSS sizing calculations
-                                // that rely on requestAnimationFrame callbacks. This test framework
-                                // supports 4 by default. I might make this configurable in the future
-                                // if need be. (ie. can be disabled, decreased or increased)
-                                window.requestAnimationFrame(() => {
-                                    window.requestAnimationFrame(() => {
-                                        window.requestAnimationFrame(() => {
-                                            window.requestAnimationFrame(() => {
-                                                resolve();
-                                            });
-                                        });
-                                    });
-                                });
-                            });
-                        }).catch((err) => {
-                            reject(err);
-                            return;
-                        });
-                    });
-                });
+          // Remove any plugins that don't work or cause crashes
+          {
+            let plugins: any[] = (aurelia.use as any).info;
+            plugins = plugins.filter((plugin) => {
+              if (plugin &&
+                plugin.moduleId &&
+                plugin.moduleId === 'aurelia-dialog') {
+                // NOTE: Jake: 2018-12-19
+                // Aurelia dialog does not work with Cypress Unit testing. It seems like it tries to load <ux-dialog> in its own
+                // special way, and this falls over.
+                /*
+                    (missing: http://localhost:61465/__cypress/iframes/integration/unit/4.autocomplete.test.ts)
+                        at HTMLScriptElement.onScriptComplete (http://localhost:61465/__cypress/tests?p=cypress\integration\unit\autocomplete.test.ts-275:115:29)
+                    From previous event:
+                        at Function.requireEnsure [as e] (http://localhost:61465/__cypress/tests?p=cypress\integration\unit\autocomplete.test.ts-275:89:28)
+                        at Object.ux-dialog (webpack:///./node_modules/aurelia-dialog/dist/native-modules/dialog-configuration.js?:13:59)
+                        at eval (webpack:///./node_modules/aurelia-dialog/dist/native-modules/dialog-configuration.js?:41:91)
+                        at Array.map (<anonymous>)
+                */
+                // tslint:disable-next-line:no-console
+                console.warn('aurelia-dialog causes Cypress to crash. Removing plugin...');
+                return false;
+              }
+              return true;
             });
-        });
-    }
+            (aurelia.use as any).info = plugins;
+          }
 
-    private configure = (aurelia: Aurelia): void | FrameworkConfiguration => {
-        return aurelia.use.standardConfiguration();
-    }
+          return aurelia.start().then(() => {
+            if (document.activeElement !== document.body) {
+              // Reset focus to body element if it's not on it
+              document.body.focus();
+            }
+
+            this.host = document.createElement('template');
+            this.host.innerHTML = this.html;
+
+            // Compile the template and copy styles to the main iframe
+            let view: ViewWithControllers;
+            const compiler = Container.instance.get(ViewCompiler);
+            try {
+              view = compiler.compile(this.host, Container.instance.get(ViewResources)).create(Container.instance);
+            } catch (err) {
+              reject(err);
+              return;
+            }
+
+            if (view.controllers.length > 0) {
+              this.viewModel = view.controllers[0].viewModel;
+              if (this.viewModel) {
+                copyStyles(this.viewModel.constructor.name);
+              } else {
+                // tslint:disable-next-line:no-console
+                console.warn('No view model found on first controller. Styles might not work.', this.html);
+              }
+            } else {
+              // NOTE(Jake): 2018-12-19
+              // Not sure if/when this case will execute or
+              // what the ramifications of this are.
+              copyStyles('undefined');
+              // tslint:disable-next-line:no-console
+              console.warn('Unable to determine component name from template. Bugs may occur in cleanup.', this.html);
+            }
+
+            // Clear the document body and add child
+            while (document.body.firstChild) {
+              document.body.removeChild(document.body.firstChild);
+            }
+            document.body.appendChild(view.fragment);
+
+            // NOTE: Jake: 2018-12-20
+            // Fix aurelia.enhance() problems that are occuring due to
+            // a <compose> in a component.
+            // Research: https://github.com/aurelia/framework/issues/600#issuecomment-252479570
+            // Gist: https://gist.run/?id=c59eed72e1c255b8f462c1d45e495a7a
+            document.body.querySelectorAll('.au-target').forEach((el) => {
+              el.classList.remove('au-target');
+              el.removeAttribute('au-target-id');
+            });
+
+            return aurelia.enhance(this.bindingContext, document.body).then(() => {
+              // NOTE: Jake: 2018-12-19
+              // These are in the original aurelia-testing library
+              // this.rootView = aurelia.root;
+              // this.element = this.host.firstElementChild as Element;
+
+              if (view.bind) {
+                view.bind(this.bindingContext);
+              }
+              if (view.attached) {
+                view.attached();
+              }
+              componentsAttached.push(view);
+
+              // Wait 4 frames, this allows us to do "hacky" CSS sizing calculations
+              // that rely on requestAnimationFrame callbacks. This test framework
+              // supports 4 by default. I might make this configurable in the future
+              // if need be. (ie. can be disabled, decreased or increased)
+              window.requestAnimationFrame(() => {
+                window.requestAnimationFrame(() => {
+                  window.requestAnimationFrame(() => {
+                    window.requestAnimationFrame(() => {
+                      resolve();
+                    });
+                  });
+                });
+              });
+            });
+          }).catch((err) => {
+            reject(err);
+            return;
+          });
+        });
+      });
+    });
+  }
+
+  private configure = (aurelia: Aurelia): void | FrameworkConfiguration => {
+    return aurelia.use.standardConfiguration();
+  }
 }

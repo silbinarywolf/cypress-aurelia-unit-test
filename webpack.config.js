@@ -6,6 +6,9 @@ module.exports = merge.smartStrategy(
     'module.rules.use': 'prepend'
   }
 )(common, {
+  entry: {
+    app: ['aurelia-bootstrapper'],
+  },
   module: {
     rules: [
       {

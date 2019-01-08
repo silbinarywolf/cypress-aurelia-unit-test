@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "declaration": true
+  },
+  "include": [
+    "lib/*"
+  ],
+  "exclude": [
+    ".vscode",
+    "dist",
+    "node_modules",
+    "doc"
+  ]
+}

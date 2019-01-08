@@ -1,0 +1,38 @@
+{
+  "compilerOptions": {
+    "lib": [
+      "es6",
+      "dom"
+    ],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "outDir": "dist/amd",
+    "strict": true,
+    "noImplicitAny": true,
+    "noUnusedLocals": true,
+    "removeComments": true,
+    "skipLibCheck": true,
+    "noImplicitReturns": true,
+    "strictNullChecks": true,
+    "allowSyntheticDefaultImports": true,
+    "experimentalDecorators": true,
+    "forceConsistentCasingInFileNames": true,
+    "target": "es5",
+    "jsx": "react",
+    "types": [
+      "cypress"
+    ]
+  },
+  "include": [
+    "src/*",
+    "src/**/*",
+    "lib/*",
+    "cypress/**/*",
+  ],
+  "exclude": [
+    ".vscode",
+    "dist",
+    "node_modules",
+    "doc"
+  ]
+}

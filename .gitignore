@@ -2,5 +2,13 @@ node_modules
 .idea
 .DS_STORE
 *.swp
-npm-debug.log*
+npm-debug
+.log
+dist
+LICENSE
 .test
+yarn.lock
+# Cypress BEGIN #
+cypress/videos
+cypress/screenshots
+# Cypress END #

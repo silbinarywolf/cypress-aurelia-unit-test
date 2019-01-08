@@ -1,29 +1,16 @@
 {
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "lib": ["lib/*"],
-      "example": ["src/*"]
-    },
-    "outDir": "./dist/",
-    "strict": true,
-    "noImplicitAny": true,
-    "noUnusedLocals": true,
-    "removeComments": true,
-    "noImplicitReturns": true,
-    "strictNullChecks": true,
-    "allowSyntheticDefaultImports": true,
-    "forceConsistentCasingInFileNames": true,
-    "module": "es6",
-    "target": "es5",
-    "jsx": "react",
-    "types": [
-      "cypress"
-    ]
+      "cypress-aurelia-unit-test": ["lib/index"],
+      "~/*": ["src/*"]
+    }
   },
-  "exclude": [
-    ".vscode",
-    "dist",
-    "doc"
+  "include": [
+    "src/*",
+    "src/**/*",
+    "lib/*",
+    "cypress/**/*",
   ]
 }

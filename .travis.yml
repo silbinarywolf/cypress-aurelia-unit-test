@@ -1,0 +1,27 @@
+# Based off of https://github.com/cypress-io/cypress-example-todomvc/blob/master/.travis.yml
+language: node_js
+
+node_js:
+  # Support 8.11 and up, as that is what we use
+  - 8.11
+
+# Cache NPM folder and Cypress binary
+cache:
+  directories:
+    - ~/.npm
+    - ~/.cache
+
+install:
+  # using "npm install" instead of "npm ci" as our npm version is 5.6.0
+  - npm install
+
+script:
+  - npm run-script tsfmt:verify
+  - npm run-script tslint
+  ## now run cypress headlessly
+  ## and record all of the tests.
+  ## Cypress will search for a
+  ## CYPRESS_RECORD_KEY environment
+  ## variable by default and apply
+  ## this to the run.
+  - npm run-script cypress:run
