@@ -4,10 +4,10 @@ import { ComponentTester, StageComponent } from 'cypress-aurelia-unit-test';
 
 import { configurationWithoutStart } from '~/main';
 import { BoxComponent } from '~/box-component/box-component';
+import * as styles from '~/box-component/box-component.scss';
 
 describe('CustomBootstrap', () => {
   let component: ComponentTester<BoxComponent>;
-  const textElementSelector = '.box-component__content';
 
   beforeEach(() => {
     component = StageComponent
@@ -26,6 +26,6 @@ describe('CustomBootstrap', () => {
 
   it('Test custom bootstrap', () => {
     component.create(bootstrap);
-    cy.get(textElementSelector).contains('Test custom bootstrap!');
+    cy.get(`.${styles.content}`).contains('Test custom bootstrap!');
   });
 });

@@ -1,3 +1,5 @@
+/// <reference types="cypress" />
+
 import 'reflect-metadata';
 import { Aurelia, Container, FrameworkConfiguration, ViewCompiler, ViewResources } from 'aurelia-framework';
 import { DOM } from 'aurelia-pal';
@@ -12,6 +14,11 @@ import { View } from 'aurelia-templating';
 interface ViewWithControllers extends View {
   controllers: Array<{ viewModel: any }>;
 }
+
+// track the patches being used
+let patches = newPatches();
+
+const aureliaDialogWarningMessage = 'aurelia-dialog causes Cypress to crash. Removing plugin...';
 
 // having weak reference to styles prevents garbage collection
 // and "losing" styles when the next test starts
@@ -57,13 +64,27 @@ function copyStyles(componentName: string): void {
   }
 
   const parentDocument = window.parent.document;
-  const projectName = (window as any).Cypress.config('projectName');
+  const projectName = Cypress.config('projectName' as any);
   const appIframeId = `Your App: '${projectName}'`;
   const appIframe = parentDocument.getElementById(appIframeId);
   const head = (appIframe as any).contentDocument.querySelector('head');
   styles.forEach(style => {
     head.appendChild(style);
   });
+}
+
+function newPatches() {
+  return {
+    aureliaDialogDisabled: false
+  };
+}
+
+// _ is not supported / backwards compatible. Use this at your own risk.
+// tslint:disable-next-line:class-name
+export class _ {
+  public static Patches() {
+    return { ...patches };
+  }
 }
 
 export class StageComponent {
@@ -124,11 +145,13 @@ export class ComponentTester<T = any> {
   }
 
   public create(bootstrap: (configure: (aurelia: Aurelia) => Promise<void>) => Promise<void>): any {
+    // reset special internals
+    patches = newPatches();
+
     // NOTE(Jake): 2019-01-08
     // We have an "any" annotation on create to silence the following error:
     // TS4053: Return type of public method from exported class has or is using name 'Bluebird' from external module
     // "cypress-aurelia-unit-test/node_modules/cypress/node_modules/@types/bluebird/index" but cannot be named.
-
     return new Cypress.Promise((resolve, reject) => {
       const document: Document = (cy as any).state('document');
       return bootstrap((aurelia: Aurelia) => {
@@ -149,29 +172,32 @@ export class ComponentTester<T = any> {
           // Remove any plugins that don't work or cause crashes
           {
             let plugins: any[] = (aurelia.use as any).info;
-            plugins = plugins.filter((plugin) => {
-              if (plugin &&
-                plugin.moduleId &&
-                plugin.moduleId === 'aurelia-dialog') {
-                // NOTE: Jake: 2018-12-19
-                // Aurelia dialog does not work with Cypress Unit testing. It seems like it tries to load <ux-dialog> in its own
-                // special way, and this falls over.
-                /*
-                    (missing: http://localhost:61465/__cypress/iframes/integration/unit/4.autocomplete.test.ts)
-                        at HTMLScriptElement.onScriptComplete (http://localhost:61465/__cypress/tests?p=cypress\integration\unit\autocomplete.test.ts-275:115:29)
-                    From previous event:
-                        at Function.requireEnsure [as e] (http://localhost:61465/__cypress/tests?p=cypress\integration\unit\autocomplete.test.ts-275:89:28)
-                        at Object.ux-dialog (webpack:///./node_modules/aurelia-dialog/dist/native-modules/dialog-configuration.js?:13:59)
-                        at eval (webpack:///./node_modules/aurelia-dialog/dist/native-modules/dialog-configuration.js?:41:91)
-                        at Array.map (<anonymous>)
-                */
-                // tslint:disable-next-line:no-console
-                console.warn('aurelia-dialog causes Cypress to crash. Removing plugin...');
-                return false;
-              }
-              return true;
-            });
-            (aurelia.use as any).info = plugins;
+            if (plugins) {
+              plugins = plugins.filter((plugin) => {
+                if (plugin &&
+                  plugin.moduleId &&
+                  plugin.moduleId === 'aurelia-dialog') {
+                  // NOTE: Jake: 2018-12-19
+                  // Aurelia dialog does not work with Cypress Unit testing. It seems like it tries to load <ux-dialog> in its own
+                  // special way, and this falls over.
+                  /*
+                      (missing: http://localhost:61465/__cypress/iframes/integration/unit/4.autocomplete.test.ts)
+                          at HTMLScriptElement.onScriptComplete (http://localhost:61465/__cypress/tests?p=cypress\integration\unit\autocomplete.test.ts-275:115:29)
+                      From previous event:
+                          at Function.requireEnsure [as e] (http://localhost:61465/__cypress/tests?p=cypress\integration\unit\autocomplete.test.ts-275:89:28)
+                          at Object.ux-dialog (webpack:///./node_modules/aurelia-dialog/dist/native-modules/dialog-configuration.js?:13:59)
+                          at eval (webpack:///./node_modules/aurelia-dialog/dist/native-modules/dialog-configuration.js?:41:91)
+                          at Array.map (<anonymous>)
+                  */
+                  // tslint:disable-next-line:no-console
+                  console.warn(aureliaDialogWarningMessage);
+                  patches.aureliaDialogDisabled = true;
+                  return false;
+                }
+                return true;
+              });
+              (aurelia.use as any).info = plugins;
+            }
           }
 
           return aurelia.start().then(() => {

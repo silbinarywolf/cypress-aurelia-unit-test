@@ -1,1 +1,1 @@
-export { StageComponent, ComponentTester } from './component-tester';
+export * from './component-tester';

@@ -1,7 +1,7 @@
 // https://github.com/cypress-io/cypress-example-recipes/blob/master/examples/preprocessors__typescript-webpack/cypress/plugins/index.js
 const wp = require('@cypress/webpack-preprocessor');
 const path = require('path');
-const webpackOptions = require(path.resolve(__dirname, '../../webpack.config'));
+const webpackOptions = require(path.resolve(__dirname, '../../webpack.cypress'));
 if (!webpackOptions) {
   throw new Error('Missing webpack options.');
 }

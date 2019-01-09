@@ -18,10 +18,7 @@
     "experimentalDecorators": true,
     "forceConsistentCasingInFileNames": true,
     "target": "es5",
-    "jsx": "react",
-    "types": [
-      "cypress"
-    ]
+    "jsx": "react"
   },
   "include": [
     "src/*",

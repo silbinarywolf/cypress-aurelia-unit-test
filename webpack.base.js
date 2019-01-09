@@ -1,4 +1,5 @@
 const path = require('path');
+
 const { AureliaPlugin } = require('aurelia-webpack-plugin');
 
 module.exports = {
@@ -16,10 +17,19 @@ module.exports = {
         test: /\.scss$/,
         use: [
           {
+            loader: require.resolve('css-modules-typescript-loader'),
+            options: {
+              // NOTE(Jake): 2019-01-09
+              // Only going to use 'verify' for now as Cypress will get caught
+              // in an infinite loop:
+              // https://github.com/seek-oss/css-modules-typescript-loader/issues/5
+              mode: 'verify',
+              //mode: process.env.CI ? 'verify' : 'emit'
+            }
+          },
+          {
             loader: require.resolve('css-loader'),
             options: {
-              importLoaders: 1,
-              sourceMap: true,
               modules: true,
               localIdentName: '[name]__[local]',
             },
@@ -37,8 +47,11 @@ module.exports = {
       },
       {
         test: /\.tsx?$/,
-        use: 'ts-loader',
-        exclude: path.resolve(__dirname, 'node_modules'),
+        use: [
+          {
+            loader: 'ts-loader'
+          }
+        ]
       }
     ]
   },
@@ -71,7 +84,7 @@ module.exports = {
   ],
   optimization: {
     splitChunks: {
-      //chunks: 'all'
+      chunks: 'all',
       cacheGroups: {
         styles: {
           name: 'styles',

@@ -25,3 +25,6 @@ script:
   ## variable by default and apply
   ## this to the run.
   - npm run-script cypress:run
+
+after_success:
+  - npm run-script semantic-release
