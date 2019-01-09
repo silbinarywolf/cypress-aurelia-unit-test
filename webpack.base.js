@@ -1,4 +1,5 @@
 const path = require('path');
+
 const { AureliaPlugin } = require('aurelia-webpack-plugin');
 
 module.exports = {
@@ -37,8 +38,12 @@ module.exports = {
       },
       {
         test: /\.tsx?$/,
-        use: 'ts-loader',
-        exclude: path.resolve(__dirname, 'node_modules'),
+        //exclude: path.resolve(__dirname, 'node_modules'),
+        use: [
+          {
+            loader: 'ts-loader'
+          }
+        ]
       }
     ]
   },
@@ -71,7 +76,7 @@ module.exports = {
   ],
   optimization: {
     splitChunks: {
-      //chunks: 'all'
+      chunks: 'all',
       cacheGroups: {
         styles: {
           name: 'styles',
