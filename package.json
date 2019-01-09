@@ -29,7 +29,8 @@
     "tslint": "tslint -c ./tslint.json -p tsconfig.json",
     "tslint:fix": "tslint --fix -c ./tslint.json -p tsconfig.json",
     "tsfmt": "tsfmt -r",
-    "tsfmt:verify": "tsfmt --verify -r"
+    "tsfmt:verify": "tsfmt --verify -r",
+    "semantic-release": "semantic-release"
   },
   "dependencies": {},
   "devDependencies": {
@@ -53,6 +54,7 @@
     "reflect-metadata": "^0.1.12",
     "sass": "^1.15.2",
     "sass-loader": "^7.1.0",
+    "semantic-release": "^15.13.2",
     "style-loader": "^0.23.1",
     "ts-loader": "^5.3.1",
     "tslint": "^5.12.0",

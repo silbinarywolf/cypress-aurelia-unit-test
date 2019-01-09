@@ -11,14 +11,6 @@ import { View } from 'aurelia-templating';
 //    root: ViewWithControllers;
 // }
 
-declare global {
-  interface Window {
-    AureliaCypress?: {
-      AureliaDialogIsDisabled?: boolean
-    };
-  }
-}
-
 interface ViewWithControllers extends View {
   controllers: Array<{ viewModel: any }>;
 }
