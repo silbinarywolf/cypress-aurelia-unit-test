@@ -12,11 +12,11 @@ import { View } from 'aurelia-templating';
 // }
 
 declare global {
-    interface Window { 
-      AureliaCypress?: {
-        AureliaDialogIsDisabled?: boolean
-      }; 
-    }
+  interface Window {
+    AureliaCypress?: {
+      AureliaDialogIsDisabled?: boolean
+    };
+  }
 }
 
 interface ViewWithControllers extends View {
@@ -84,13 +84,14 @@ function copyStyles(componentName: string): void {
 function newPatches() {
   return {
     aureliaDialogDisabled: false
-  }
+  };
 }
 
 // _ is not supported / backwards compatible. Use this at your own risk.
+// tslint:disable-next-line:class-name
 export class _ {
   public static Patches() {
-    return {...patches};
+    return { ...patches };
   }
 }
 

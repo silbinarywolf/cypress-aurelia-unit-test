@@ -23,14 +23,14 @@ describe('AureliaDialog', () => {
           .developmentLogging()
           .standardConfiguration()
           .plugin(PLATFORM.moduleName('aurelia-dialog'));
-      })
+      });
     component.create(bootstrap);
     // NOTE(Jake): 2019-01-09
     // I had to wrap this expect() in cy command or else I had timing problems.
     // Not sure what the most idiomatic way to test this behaviour is.
     cy.window().then((win) => {
-      expect(_.Patches().aureliaDialogDisabled).to.be.true
-    })
+      expect(_.Patches().aureliaDialogDisabled).to.be.equal(true);
+    });
   });
 
   it('Test that that aurelia dialog isn\'t disabled if it isnt used.', () => {
@@ -46,14 +46,14 @@ describe('AureliaDialog', () => {
       .bootstrap((aurelia) => {
         aurelia.use
           .developmentLogging()
-          .standardConfiguration()
-      })
+          .standardConfiguration();
+      });
     component.create(bootstrap);
     // NOTE(Jake): 2019-01-09
     // I had to wrap this expect() in cy command or else I had timing problems.
     // Not sure what the most idiomatic way to test this behaviour is.
     cy.window().then((win) => {
-      expect(_.Patches().aureliaDialogDisabled).to.be.false
-    })
+      expect(_.Patches().aureliaDialogDisabled).to.be.equal(false);
+    });
   });
 });
