@@ -17,10 +17,14 @@ module.exports = {
         test: /\.scss$/,
         use: [
           {
+            loader: require.resolve('css-modules-typescript-loader'),
+            options: {
+              mode: process.env.CI ? 'verify' : 'emit'
+            }
+          },
+          {
             loader: require.resolve('css-loader'),
             options: {
-              importLoaders: 1,
-              sourceMap: true,
               modules: true,
               localIdentName: '[name]__[local]',
             },

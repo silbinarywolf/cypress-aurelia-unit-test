@@ -1,5 +1,6 @@
 const webpack = require('webpack');
 const merge = require('webpack-merge');
+
 const common = require('./webpack.base.js');
 
 module.exports = merge.smartStrategy(
@@ -17,7 +18,9 @@ module.exports = merge.smartStrategy(
       {
         test: /\.scss$/,
         use: [
-          require.resolve('style-loader')
+          {
+            loader: require.resolve('style-loader')
+          }
         ]
       },
       {

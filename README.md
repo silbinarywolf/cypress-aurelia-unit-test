@@ -8,4 +8,4 @@ The purpose of this module is so that components can be visually unit tested as 
 
 ## Credits
 
-[Gleb Bahmutov](https://github.com/bahmutov/cypress-react-unit-test) for their Cypress React Unit Test library. It helped me figure out how to get styles working quickly.
+- [Gleb Bahmutov](https://github.com/bahmutov/cypress-react-unit-test) for their Cypress React Unit Test library. It helped me figure out how to get styles working quickly.
