@@ -28,3 +28,7 @@ script:
 
 after_success:
   - npm run-script semantic-release
+
+branches:
+  except:
+    - /^v\d+\.\d+\.\d+$/

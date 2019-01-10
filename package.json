@@ -32,8 +32,19 @@
     "tsfmt:verify": "tsfmt --verify -r",
     "semantic-release": "semantic-release"
   },
+  "config": {
+    "commitizen": {
+      "path": "cz-conventional-changelog"
+    }
+  },
+  "husky": {
+    "hooks": {
+      "commit-msg": "commitlint --edit"
+    }
+  },
   "dependencies": {},
   "devDependencies": {
+    "@commitlint/cli": "^7.2.1",
     "@cypress/webpack-preprocessor": "^4.0.2",
     "@types/bluebird": "^3.5.25",
     "aurelia-bootstrapper": "^2.1.1",
@@ -47,10 +58,12 @@
     "aurelia-templating": "^1.10.1",
     "aurelia-webpack-plugin": "^3.0.0",
     "closure-webpack-plugin": "^2.0.0-rc.17",
+    "commitizen": "^3.0.5",
     "css-loader": "^2.0.1",
     "css-modules-typescript-loader": "^1.1.0",
     "cypress": "^3.1.4",
     "google-closure-compiler": "^20181231.0.0-webpack-beta",
+    "husky": "^1.3.1",
     "reflect-metadata": "^0.1.12",
     "sass": "^1.15.2",
     "sass-loader": "^7.1.0",
