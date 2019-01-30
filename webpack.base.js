@@ -19,12 +19,7 @@ module.exports = {
           {
             loader: require.resolve('css-modules-typescript-loader'),
             options: {
-              // NOTE(Jake): 2019-01-09
-              // Only going to use 'verify' for now as Cypress will get caught
-              // in an infinite loop:
-              // https://github.com/seek-oss/css-modules-typescript-loader/issues/5
-              mode: 'verify',
-              //mode: process.env.CI ? 'verify' : 'emit'
+              mode: process.env.CI ? 'verify' : 'emit'
             }
           },
           {

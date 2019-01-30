@@ -1,0 +1,8 @@
+<template>
+    <button type="button" click.delegate="onClick($event)">
+      Submit
+    </button>
+    <p if.bind="hasBeenClicked">
+      Button clicked!
+    </p>
+</template>

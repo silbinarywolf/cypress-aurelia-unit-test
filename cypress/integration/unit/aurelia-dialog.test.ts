@@ -25,10 +25,12 @@ describe('AureliaDialog', () => {
           .plugin(PLATFORM.moduleName('aurelia-dialog'));
       });
     component.create(bootstrap);
-    // NOTE(Jake): 2019-01-09
-    // I had to wrap this expect() in cy command or else I had timing problems.
+    // NOTE(Jake): 2019-01-30
+    // We check the text inside the component to allow some time to elapse.
+    // I had to wrap this expect() in cy command or else I had more timing problems.
     // Not sure what the most idiomatic way to test this behaviour is.
-    cy.window().then((win) => {
+    cy.get('box-component').contains('Aurelia Dialog');
+    cy.then(() => {
       expect(_.Patches().aureliaDialogDisabled).to.be.equal(true);
     });
   });
