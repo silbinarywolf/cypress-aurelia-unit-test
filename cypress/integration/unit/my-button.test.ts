@@ -17,6 +17,6 @@ describe('Button', () => {
       });
     component.create(bootstrap);
     cy.get('button').click();
-    cy.get('p').contains('Button clicked!')
+    cy.get('p').contains('Button clicked!');
   });
 });
