@@ -252,18 +252,29 @@ export class ComponentTester<T = any> {
               el.removeAttribute('au-target-id');
             });
 
-            return aurelia.enhance(this.bindingContext, document.body).then(() => {
+            // NOTE: Jake: 2019-01-31 - #8
+            // Consider allowing bindingContext to be a function as well.
+            // A potential benefit is that you can use "Container.instance.get" within the context
+            const bindingContext = this.bindingContext;
+            // const bindingContext = typeof(this.bindingContext) === 'function' ? this.bindingContext() : this.bindingContext;
+
+            return aurelia.enhance(bindingContext, document.body).then(() => {
               // NOTE: Jake: 2018-12-19
               // These are in the original aurelia-testing library
               // this.rootView = aurelia.root;
               // this.element = this.host.firstElementChild as Element;
 
-              if (view.bind) {
-                view.bind(this.bindingContext);
-              }
-              if (view.attached) {
-                view.attached();
-              }
+              // NOTE: Jake: 2019-01-31 - #9
+              // We used to call these manually like the aurelia-testing library,
+              // however aurelia.enhance() calls lifecycle methods already, so this was
+              // actually causing bugs where attached() was being called twice.
+              // if (view.bind) {
+              //  view.bind(bindingContext);
+              // }
+              // if (view.attached) {
+              //  view.attached();
+              // }
+
               componentsAttached.push(view);
 
               // Wait 4 frames, this allows us to do "hacky" CSS sizing calculations
