@@ -1,19 +1,17 @@
 /// <reference types="cypress" />
 
 import 'reflect-metadata';
-import { Aurelia, Container, FrameworkConfiguration, ViewCompiler, ViewResources } from 'aurelia-framework';
+import { Aurelia, FrameworkConfiguration } from 'aurelia-framework';
 import { DOM } from 'aurelia-pal';
-import { View } from 'aurelia-templating';
 
 // NOTE(Jake): 2019-01-07
 // Used by aurelia-testing. Keeping incase we want to reintroduce.
 // interface AureliaWithRoot extends Aurelia {
 //    root: ViewWithControllers;
 // }
-
-interface ViewWithControllers extends View {
-  controllers: Array<{ viewModel: any }>;
-}
+// interface ViewWithControllers extends View {
+//  controllers: Array<{ viewModel: any }>;
+// }
 
 // track the patches being used
 let patches = newPatches();
@@ -23,19 +21,6 @@ const aureliaDialogWarningMessage = 'aurelia-dialog causes Cypress to crash. Rem
 // having weak reference to styles prevents garbage collection
 // and "losing" styles when the next test starts
 const stylesCache: Map<string, NodeListOf<Element>> = new Map<string, NodeListOf<Element>>();
-
-// track components that were attached so they can be detached before
-// each build
-const componentsAttached: any[] = [];
-
-function disposeComponents() {
-  for (const component of componentsAttached) {
-    if (component.detached) {
-      component.detached();
-    }
-  }
-  componentsAttached.length = 0;
-}
 
 // NOTE: Jake: 2018-12-18
 // Taken from: https://github.com/bahmutov/cypress-react-unit-test/blob/master/lib/index.js
@@ -90,10 +75,6 @@ export class _ {
 export class StageComponent {
   public static withResources<T = any>(resources: string | string[] = []): ComponentTester<T> {
     // NOTE: Jake: 2018-12-19
-    // Any components we tracked from the previous test, lets dispose them.
-    disposeComponents();
-
-    // NOTE: Jake: 2018-12-19
     // Clear document.body, this is so the first step of 2nd test won't have
     // the previous test rendered in it when you're debugging.
     const document: Document = (cy as any).state('document');
@@ -112,7 +93,7 @@ export class ComponentTester<T = any> {
 
   // private rootView: View;
 
-  private host: HTMLTemplateElement | HTMLDivElement | null = null;
+  // private host: HTMLTemplateElement | HTMLDivElement | null = null;
 
   private html: string = '';
 
@@ -206,51 +187,11 @@ export class ComponentTester<T = any> {
               document.body.focus();
             }
 
-            this.host = document.createElement('template');
-            this.host.innerHTML = this.html;
-
-            // Compile the template and copy styles to the main iframe
-            let view: ViewWithControllers;
-            const compiler = Container.instance.get(ViewCompiler);
-            try {
-              view = compiler.compile(this.host, Container.instance.get(ViewResources)).create(Container.instance);
-            } catch (err) {
-              reject(err);
-              return;
-            }
-
-            if (view.controllers.length > 0) {
-              this.viewModel = view.controllers[0].viewModel;
-              if (this.viewModel) {
-                copyStyles(this.viewModel.constructor.name);
-              } else {
-                // tslint:disable-next-line:no-console
-                console.warn('No view model found on first controller. Styles might not work.', this.html);
-              }
-            } else {
-              // NOTE(Jake): 2018-12-19
-              // Not sure if/when this case will execute or
-              // what the ramifications of this are.
-              copyStyles('undefined');
-              // tslint:disable-next-line:no-console
-              console.warn('Unable to determine component name from template. Bugs may occur in cleanup.', this.html);
-            }
-
             // Clear the document body and add child
             while (document.body.firstChild) {
               document.body.removeChild(document.body.firstChild);
             }
-            document.body.appendChild(view.fragment);
-
-            // NOTE: Jake: 2018-12-20
-            // Fix aurelia.enhance() problems that are occuring due to
-            // a <compose> in a component.
-            // Research: https://github.com/aurelia/framework/issues/600#issuecomment-252479570
-            // Gist: https://gist.run/?id=c59eed72e1c255b8f462c1d45e495a7a
-            document.body.querySelectorAll('.au-target').forEach((el) => {
-              el.classList.remove('au-target');
-              el.removeAttribute('au-target-id');
-            });
+            document.body.innerHTML = this.html;
 
             // NOTE: Jake: 2019-01-31 - #8
             // Consider allowing bindingContext to be a function as well.
@@ -263,6 +204,7 @@ export class ComponentTester<T = any> {
               // These are in the original aurelia-testing library
               // this.rootView = aurelia.root;
               // this.element = this.host.firstElementChild as Element;
+              copyStyles(this.resources.join(','));
 
               // NOTE: Jake: 2019-01-31 - #9
               // We used to call these manually like the aurelia-testing library,
@@ -274,8 +216,6 @@ export class ComponentTester<T = any> {
               // if (view.attached) {
               //  view.attached();
               // }
-
-              componentsAttached.push(view);
 
               // Wait 4 frames, this allows us to do "hacky" CSS sizing calculations
               // that rely on requestAnimationFrame callbacks. This test framework
