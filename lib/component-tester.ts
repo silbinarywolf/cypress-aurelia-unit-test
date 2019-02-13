@@ -4,6 +4,21 @@ import 'reflect-metadata';
 import { Aurelia, FrameworkConfiguration } from 'aurelia-framework';
 import { DOM } from 'aurelia-pal';
 
+interface AureliaController {
+  view: {
+    resources: {
+      viewUrl: string
+    }
+  };
+  viewModel: any;
+}
+
+interface Node {
+  firstChild: Node | null;
+  nextSibling: Node | null;
+  au?: { [name: string]: AureliaController | undefined };
+}
+
 // NOTE(Jake): 2019-01-07
 // Used by aurelia-testing. Keeping incase we want to reintroduce.
 // interface AureliaWithRoot extends Aurelia {
@@ -58,6 +73,20 @@ function copyStyles(componentName: string): void {
   });
 }
 
+// walkNode recursively
+function walkNode(node: Node | null, func: (node: Node) => void): void {
+  if (!node ||
+    !node.firstChild) {
+    return;
+  }
+  func(node);
+  node = node.firstChild;
+  while (node) {
+    walkNode(node, func);
+    node = node.nextSibling;
+  }
+}
+
 function newPatches() {
   return {
     aureliaDialogDisabled: false
@@ -77,9 +106,9 @@ export class StageComponent {
     // NOTE: Jake: 2018-12-19
     // Clear document.body, this is so the first step of 2nd test won't have
     // the previous test rendered in it when you're debugging.
-    const document: Document = (cy as any).state('document');
-    while (document.body.firstChild) {
-      document.body.removeChild(document.body.firstChild);
+    const doc: Document = (cy as any).state('document');
+    while (doc.body.firstChild) {
+      doc.body.removeChild(doc.body.firstChild);
     }
 
     return new ComponentTester().withResources(resources);
@@ -87,6 +116,9 @@ export class StageComponent {
 }
 
 export class ComponentTester<T = any> {
+  /**
+   * The class of the component. This is value is undefined for containerless components.
+   */
   public viewModel?: T;
 
   // public element: Element;
@@ -134,21 +166,24 @@ export class ComponentTester<T = any> {
     // TS4053: Return type of public method from exported class has or is using name 'Bluebird' from external module
     // "cypress-aurelia-unit-test/node_modules/cypress/node_modules/@types/bluebird/index" but cannot be named.
     return new Cypress.Promise((resolve, reject) => {
-      const document: Document = (cy as any).state('document');
+      const doc: Document = (cy as any).state('document');
       return bootstrap((aurelia: Aurelia) => {
         return Promise.resolve(this.configure(aurelia)).then(() => {
           if (this.resources) {
             aurelia.use.globalResources(this.resources);
           }
 
+          // Reset viewModel
+          this.viewModel = undefined;
+
           // NOTE(Jake): 2018-12-18
           // Fixes "inner error: TypeError: Illegal constructor"
           // Modified answer from: https://github.com/aurelia/framework/issues/382
-          aurelia.container.registerInstance(Element, document.createElement);
+          aurelia.container.registerInstance(Element, doc.createElement);
 
           // NOTE(Jake): 2018-12-20
           // Fix cases where a user has used @inject(DOM.Element)
-          aurelia.container.registerInstance(DOM.Element, document.createElement);
+          aurelia.container.registerInstance(DOM.Element, doc.createElement);
 
           // Remove any plugins that don't work or cause crashes
           {
@@ -182,29 +217,66 @@ export class ComponentTester<T = any> {
           }
 
           return aurelia.start().then(() => {
-            if (document.activeElement !== document.body) {
+            if (doc.activeElement !== doc.body) {
               // Reset focus to body element if it's not on it
-              document.body.focus();
+              doc.body.focus();
             }
 
             // Clear the document body and add child
-            while (document.body.firstChild) {
-              document.body.removeChild(document.body.firstChild);
+            while (doc.body.firstChild) {
+              doc.body.removeChild(doc.body.firstChild);
             }
-            document.body.innerHTML = this.html;
+            doc.body.innerHTML = this.html;
 
             // NOTE: Jake: 2019-01-31 - #8
             // Consider allowing bindingContext to be a function as well.
             // A potential benefit is that you can use "Container.instance.get" within the context
             const bindingContext = this.bindingContext;
             // const bindingContext = typeof(this.bindingContext) === 'function' ? this.bindingContext() : this.bindingContext;
-
-            return aurelia.enhance(bindingContext, document.body).then(() => {
+            const rootElement = doc.body;
+            return aurelia.enhance(bindingContext, rootElement).then(() => {
               // NOTE: Jake: 2018-12-19
               // These are in the original aurelia-testing library
               // this.rootView = aurelia.root;
               // this.element = this.host.firstElementChild as Element;
               copyStyles(this.resources.join(','));
+
+              // NOTE: Jake: 2019-02-13
+              // We walk the newly enhanced DOM to find the controller applied
+              // to the element so that we can extract the viewModel.
+              walkNode(rootElement, (el) => {
+                if (!this.viewModel &&
+                  el.au) {
+                  const controllers = el.au;
+                  let controller;
+                  for (const key in controllers) {
+                    if (!controllers.hasOwnProperty(key)) {
+                      continue;
+                    }
+                    controller = controllers[key];
+                    break;
+                  }
+                  if (controller &&
+                    controller.view) {
+                    // NOTE: Jake: 2019-02-13
+                    // There is no way to guarantee the first element we find is the element
+                    // we intended to mount (due to @containerless), so we check that this
+                    // element's template resource reference matches the one we gave.
+                    // We also compare two versions, one string without *.html and one with it
+                    // as both are valid.
+                    const viewUrl = controller.view.resources.viewUrl;
+                    const viewUrlNoExt = viewUrl.split('.').slice(0, -1).join('.');
+                    if (this.resources.indexOf(viewUrl) > -1 ||
+                      this.resources.indexOf(viewUrlNoExt) > -1) {
+                      this.viewModel = controller.viewModel;
+                    }
+                  }
+                }
+              });
+              if (!this.viewModel) {
+                // tslint:disable-next-line:no-console
+                console.warn('Unable to determine viewModel for mounted component. This is expected behaviour for @containerless components.');
+              }
 
               // NOTE: Jake: 2019-01-31 - #9
               // We used to call these manually like the aurelia-testing library,
