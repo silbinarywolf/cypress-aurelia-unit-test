@@ -35,7 +35,7 @@ const aureliaDialogWarningMessage = 'aurelia-dialog causes Cypress to crash. Rem
 
 // having weak reference to styles prevents garbage collection
 // and "losing" styles when the next test starts
-const stylesCache: Map<string, NodeListOf<Element>> = new Map<string, NodeListOf<Element>>();
+const stylesCache: Map<string, NodeListOf<HTMLStyleElement>> = new Map<string, NodeListOf<HTMLStyleElement>>();
 
 // NOTE: Jake: 2018-12-18
 // Taken from: https://github.com/bahmutov/cypress-react-unit-test/blob/master/lib/index.js
@@ -45,7 +45,7 @@ function copyStyles(componentName: string): void {
   // like component name
   const hash = componentName;
 
-  let styles = document.querySelectorAll('head style');
+  let styles = document.head.querySelectorAll('style');
   if (styles.length) {
     // tslint:disable-next-line:no-console
     console.log('Injected %d styles into view', styles.length);

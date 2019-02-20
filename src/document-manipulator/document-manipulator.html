@@ -1,0 +1,29 @@
+<template>
+  <div>Document Manipulator</div>
+  <div>This component exists to test if various "document" functions have been overridden to point from the Spec IFrame to the App IFrame.</div>
+  <hr/>
+  <div 
+    if.bind="documentQuerySelectorSuccess"
+    class="documentQuerySelectorSuccess"
+  >
+    - documentQuerySelector
+  </div>
+  <div 
+    if.bind="documentBodyQuerySelectorSuccess"
+    class="documentBodyQuerySelectorSuccess"
+  >
+    - documentBodyQuerySelector
+  </div>
+  <div 
+    if.bind="documentQueryAllSelectorSuccess"
+    class="documentQueryAllSelectorSuccess"
+  >
+    - documentQueryAllSelector
+  </div>
+  <div 
+    if.bind="documentBodyQueryAllSelectorSuccess"
+    class="documentBodyQueryAllSelectorSuccess"
+  >
+    - documentBodyQueryAllSelector
+  </div>
+</template>
