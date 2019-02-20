@@ -1,2 +1,2 @@
-import './event-listener-fixes';
+import './iframe-fixes';
 export * from './component-tester';
