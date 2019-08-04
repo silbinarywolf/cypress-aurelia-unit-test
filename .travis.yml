@@ -1,6 +1,11 @@
 # Based off of https://github.com/cypress-io/cypress-example-todomvc/blob/master/.travis.yml
 language: node_js
 
+addons:
+  apt:
+    packages:
+    - libgconf-2-4
+
 node_js:
   # Support 8.11 and up, as that is what we use
   - 8.11
