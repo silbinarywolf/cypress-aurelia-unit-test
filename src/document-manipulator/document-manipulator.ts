@@ -23,6 +23,13 @@ export class DocumentManipulator {
     }
 
     {
+      const el = document.createElement('div');
+      el.classList.add('bodyAppendAndRemoveChild');
+      el.textContent = '- bodyAppendAndRemoveChild';
+      document.body.appendChild(el);
+    }
+
+    {
       const el = document.querySelector('document-manipulator');
       if (el) {
         this.documentQuerySelectorSuccess = true;

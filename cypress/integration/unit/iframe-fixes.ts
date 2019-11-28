@@ -21,6 +21,11 @@ describe('IframeFixes', () => {
     cy.get('.bodyAppendChild').should('exist');
   });
 
+  it('Check document.body.removeChild override is active', () => {
+    component.create(bootstrap);
+    cy.get('.bodyAppendAndRemoveChild').should('not.exist');
+  });
+
   it('Check document.querySelector override is active', () => {
     component.create(bootstrap);
     cy.get('.documentQuerySelectorSuccess').should('exist');
