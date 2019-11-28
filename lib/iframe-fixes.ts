@@ -69,7 +69,7 @@ function overrideSpecIFrameToApplyToAppIFrame(): void {
   // end up causing "The node to be removed is not a child of this node." errors.
   {
     const bodyRemoveChild = function <T extends Node>(this: T): T {
-      return appDocument.body.removeChild.apply(appDocument, arguments as any) as T;
+      return appDocument.body.removeChild.apply(appDocument.body, arguments as any) as T;
     };
     if (specDocument.body.removeChild !== bodyRemoveChild) {
       specDocument.body.removeChild = bodyRemoveChild;
