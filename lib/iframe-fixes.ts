@@ -43,6 +43,17 @@ function overrideSpecIFrameToApplyToAppIFrame(): void {
     }
   }
 
+  // Override document.removeChild on spec iframe so that if called it doesn't
+  // end up causing "The node to be removed is not a child of this node." errors.
+  {
+    const documentRemoveChild = function <T extends Node>(this: T): T {
+      return appDocument.appendChild.apply(appDocument, arguments as any) as T;
+    };
+    if (specDocument.removeChild !== documentRemoveChild) {
+      specDocument.removeChild = documentRemoveChild;
+    }
+  }
+
   // Override document.body.appendChild on spec iframe so that we can append those
   // elements to the app iframe.
   {
@@ -51,6 +62,17 @@ function overrideSpecIFrameToApplyToAppIFrame(): void {
     };
     if (specDocument.body.appendChild !== bodyAppendChild) {
       specDocument.body.appendChild = bodyAppendChild;
+    }
+  }
+
+  // Override document.body.removeChild on spec iframe so that if called it doesn't
+  // end up causing "The node to be removed is not a child of this node." errors.
+  {
+    const bodyRemoveChild = function <T extends Node>(this: T): T {
+      return appDocument.appendChild.apply(appDocument, arguments as any) as T;
+    };
+    if (specDocument.body.removeChild !== bodyRemoveChild) {
+      specDocument.body.removeChild = bodyRemoveChild;
     }
   }
 
