@@ -60,7 +60,7 @@
     "reflect-metadata": "^0.1.12",
     "sass": "^1.15.2",
     "sass-loader": "^7.1.0",
-    "semantic-release": "^15.13.19",
+    "semantic-release": "^17.2.3",
     "style-loader": "^0.23.1",
     "ts-loader": "^5.3.1",
     "tslint": "^5.18.0",
